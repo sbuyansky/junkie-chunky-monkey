@@ -17,19 +17,31 @@ const Status createHeapFile(const string fileName)
     {
 		// file doesn't exist. First create it and allocate
 		// an empty header page and data page.
+		status = db.createFile(fileName);
+		if(status != OK) return status;
 		
+		// create header page
+		bufMgr->allocPage(file, hdrPageNo, newPage);
+		hdrPage = (FileHdrPage*) newPage;
 		
+		// create first page
+		bufMgr->allocPage(file, newPageNo, newPage);
+		newPage->init(newPageNo);
 		
+		// update header page values
+		hdrPage->fileName = file->fileName.c_str();
+		hdrPage->firstPage = newPageNo;
+		hdrPage->lastPage = newPageNo;
+		hdrPage->pageCnt = 1;
+		hdrPage->recCnt = 0;
 		
+		// unpin both new pages as dirty
+		status = bufMgr->unPinPage(file, hdrPageNo, true);
+		if(status != OK) return status;
+		status = bufMgr->unPinPage(file, newPageNo, true);
+		if(status != OK) return status;
 		
-		
-		
-		
-		
-		
-		
-		
-		
+		return (OK);
     }
     return (FILEEXISTS);
 }
@@ -224,21 +236,73 @@ const Status HeapFileScan::resetScan()
 
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-    Status 	status = OK;
-    RID		nextRid;
-    RID		tmpRid;
-    int 	nextPageNo;
-    Record      rec;
-
-    
+	Status 	status = OK;
+	RID		nextRid;
+	RID		tmpRid;
+	int 	nextPageNo;
+	Record      rec;
 	
-	
-	
-	
-	
-	
-	
-	
+	// try getting next record
+	while(1) {
+		status = curPage->nextRecord(curRec, nextRid);
+		if(status == OK) {
+			// got a rid, get record
+			curRec = nextRid;
+			status = curPage->getRecord(curRec, rec);
+			if(status != OK) return status;
+			
+			// check to see if the record matches
+			if(matchRec(rec)) {
+				outRid = nextRid;
+				return OK;
+			}
+			
+			// loop back to start of while to continue looking if the record
+			// doesn't match
+			
+		} else if(status == ENDOFPAGE) {
+			// need to start on the next page
+			// get nextPage
+			status = curPage->getNextPage(nextPageNo);
+			if(status != OK) return status;
+			
+			// unpin current page
+			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+			if(status != OK) return status;
+			
+			// read next page from file into curPage
+			status = filePtr->readPage(nextPageNo, curPage);
+			if(status != OK) return status;
+			
+			// get record from first page
+			status = curPage-> firstRecord(nextRid);
+			if(status == OK) {
+				// got a rid, get record
+				curRec = nextRid;
+				status = curPage->getRecord(curRec, rec);
+				if(status != OK) return status;
+			
+				// check to see if the record matches
+				if(matchRec(rec)) {
+					outRid = nextRid;
+					return OK;
+				}
+			
+				// loop back to start of while to continue looking if the record
+				// doesn't match
+			
+			} else if(status = NORECORDS) {
+				// loop back to start of while loop to see if there is a next
+				// page
+			} else {
+				return status;
+			}
+			
+		} else {
+			// error occurred, return status
+			return status;
+		}
+	}
 	
 }
 
