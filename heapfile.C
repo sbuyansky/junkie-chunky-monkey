@@ -119,15 +119,20 @@ const int HeapFile::getRecCnt() const
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status status;
-
+    
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-   
-   
-   
-   
-   
-   
-   
+    //If the desired record is on the currently pinned page, simply invoke 
+    if(curPageNo == rid.pageNo){
+        status = curPage->getRecord(rid, rec);
+    }
+    //Otherwise, you need to unpin the currently pinned page (assuming a page is pinned) and use the pageNo field of the RID to read the page into the buffer pool.
+    else{
+    	bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	bufMgr->readPage(filePtr, rid.pageNo, curPage);
+	curPageNo = rid.pageNo;
+	status = curPage->getRecord(rid, rec);
+    }
+    return status;
 }
 
 HeapFileScan::HeapFileScan(const string & name,
