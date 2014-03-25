@@ -29,7 +29,7 @@ const Status createHeapFile(const string fileName)
 		newPage->init(newPageNo);
 		
 		// update header page values
-		hdrPage->fileName = file->fileName.c_str();
+		//hdrPage->fileName = file->fileName.c_str();
 		hdrPage->firstPage = newPageNo;
 		hdrPage->lastPage = newPageNo;
 		hdrPage->pageCnt = 1;
