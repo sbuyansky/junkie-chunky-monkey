@@ -363,6 +363,8 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
+	// TODO check if have to change current page to the newly allocated page
+
 	//check if there is space in the page
 	if((status = curPage->insertRecord(rec, outRid)) != OK){
 		//if there is not space in the page, allocate a new page
