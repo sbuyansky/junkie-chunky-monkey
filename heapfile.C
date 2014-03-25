@@ -63,17 +63,18 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		if((status = filePtr->getFirstPage(headerPageNo)) != OK){
+			returnStatus = status;
+			return;
+		}
+		filePtr->readPage(headerPageNo, (Page *) headerPage);
+		hdrDirtyFlag = true;
+
+		bufMgr->readPage(filePtr,headerPage->firstPage,curPage);
+		curPageNo = headerPage->firstPage;
+		curDirtyFlag = true;
+		curRec = NULLRID;
+
     }
     else
     {
@@ -130,15 +131,20 @@ const int HeapFile::getRecCnt() const
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status status;
-
+    
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-   
-   
-   
-   
-   
-   
-   
+    //If the desired record is on the currently pinned page, simply invoke 
+    if(curPageNo == rid.pageNo){
+        status = curPage->getRecord(rid, rec);
+    }
+    //Otherwise, you need to unpin the currently pinned page (assuming a page is pinned) and use the pageNo field of the RID to read the page into the buffer pool.
+    else{
+    	bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	bufMgr->readPage(filePtr, rid.pageNo, curPage);
+	curPageNo = rid.pageNo;
+	status = curPage->getRecord(rid, rec);
+    }
+    return status;
 }
 
 HeapFileScan::HeapFileScan(const string & name,
@@ -421,18 +427,18 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+	//check if there is space in the page
+	if((status = curPage->insertRecord(rec, outRid)) != OK){
+		//if there is not space in the page, allocate a new page
+		if((status = filePtr->allocatePage(newPageNo)) == OK){
+			//read the page in to newPage
+			if((status = filePtr->readPage(newPageNo, newPage)) == OK){
+				//insert the record into the newly allocated page
+				status = newPage->insertRecord(rec, outRid);
+			}
+		}
+	}
+	return status;
 }
 
 
