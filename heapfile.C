@@ -1,5 +1,6 @@
 #include "heapfile.h"
 #include "error.h"
+#include <stdio.h>
 
 // routine to create a heapfile
 const Status createHeapFile(const string fileName)
