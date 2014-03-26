@@ -4,6 +4,7 @@
 // routine to create a heapfile
 const Status createHeapFile(const string fileName)
 {
+	printf("In createHeapFile");
     File* 		file;
     Status 		status;
     FileHdrPage*	hdrPage;
@@ -29,7 +30,7 @@ const Status createHeapFile(const string fileName)
 		newPage->init(newPageNo);
 		
 		// update header page values
-		hdrPage->fileName = file->fileName.c_str();
+		//hdrPage->fileName = file->fileName.c_str();
 		hdrPage->firstPage = newPageNo;
 		hdrPage->lastPage = newPageNo;
 		hdrPage->pageCnt = 1;
@@ -58,7 +59,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     Status 	status;
     Page*	pagePtr;
 
-    cout << "opening file " << fileName << endl;
+    printf("In HeapFile Constructor");
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
@@ -130,6 +131,7 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
+	printf("In HeapFile getRecord");
     Status status;
     
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
@@ -242,6 +244,8 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	int 	nextPageNo;
 	Record      rec;
 	
+	printf("In HeapFile scanNext");
+
 	// try getting next record
 	while(1) {
 		status = curPage->nextRecord(curRec, nextRid);
@@ -415,6 +419,7 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
+	printf("In InsertFileScan insertRecord");
     Page*	newPage;
     int		newPageNo;
     Status	status, unpinstatus;
