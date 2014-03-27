@@ -21,26 +21,34 @@ const Status createHeapFile(const string fileName)
 		// an empty header page and data page.
 		status = db.createFile(fileName);
 		if(status != OK) return status;
-		
+
+		status = db.openFile(fileName, file);
+		if(status !=OK) return status;
+	
 		// create header page
-		bufMgr->allocPage(file, hdrPageNo, newPage);
+		status = bufMgr->allocPage(file, hdrPageNo, newPage);
+		if(status != OK){
+			return status;
+		}
+
 		hdrPage = (FileHdrPage*) newPage;
-		headerPageNo = hdrPageNo
-		hdrDirtyFlag = true;
-		
+	
 		// create first page
-		bufMgr->allocPage(file, newPageNo, newPage);
+		status = bufMgr->allocPage(file, newPageNo, newPage);
+		if(status != OK){
+			return status;
+		}
 		newPage->init(newPageNo);
-		
+	
 		// update header page values
-		//hdrPage->fileName = file->fileName.c_str();
+		strcpy(hdrPage->fileName, fileName.c_str());
 		hdrPage->firstPage = newPageNo;
 		hdrPage->lastPage = newPageNo;
 		hdrPage->pageCnt = 1;
 		hdrPage->recCnt = 0;
 		
 		// unpin both new pages as dirty
-		status = bufMgr->unPinPage(file, hdrPageNo, hdrDirtyFlag);
+		status = bufMgr->unPinPage(file, hdrPageNo, true);
 		if(status != OK) return status;
 		status = bufMgr->unPinPage(file, newPageNo, true);
 		if(status != OK) return status;
@@ -62,7 +70,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     Status 	status;
     Page*	pagePtr;
 
-    printf("In HeapFile Constructor");
+    printf("In HeapFile Constructor\n");
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
@@ -71,7 +79,8 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 			returnStatus = status;
 			return;
 		}
-		filePtr->readPage(headerPageNo, (Page *) headerPage);
+		
+		bufMgr->readPage(filePtr, headerPageNo, (Page *&) headerPage);
 		hdrDirtyFlag = true;
 
 		bufMgr->readPage(filePtr,headerPage->firstPage,curPage);
@@ -134,7 +143,7 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
-	printf("In HeapFile getRecord");
+	printf("In HeapFile getRecord\n");
     Status status;
     
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
@@ -247,7 +256,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	int 	nextPageNo;
 	Record      rec;
 	
-	printf("In HeapFile scanNext");
+	printf("In HeapFile scanNext\n");
 
 	// try getting next record
 	while(1) {
@@ -422,7 +431,7 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
-	printf("In InsertFileScan insertRecord");
+	printf("In InsertFileScan insertRecord\n");
     Page*	newPage;
     int		newPageNo;
     Status	status, unpinstatus;
