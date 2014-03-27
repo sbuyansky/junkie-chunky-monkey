@@ -1,11 +1,14 @@
 #include "heapfile.h"
 #include "error.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // routine to create a heapfile
 const Status createHeapFile(const string fileName)
 {
+#ifdef DEBUG
 	printf("In createHeapFile");
+#endif
     File* 		file;
     Status 		status;
     FileHdrPage*	hdrPage;
@@ -69,8 +72,9 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
     Page*	pagePtr;
-
+#ifdef DEBUG
     printf("In HeapFile Constructor\n");
+#endif
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
@@ -143,7 +147,9 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
+#ifdef DEBUG
 	printf("In HeapFile getRecord\n");
+#endif
     Status status;
     
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
@@ -255,9 +261,9 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	RID		tmpRid;
 	int 	nextPageNo;
 	Record      rec;
-	
+#ifdef DEBUG	
 	printf("In HeapFile scanNext\n");
-
+#endif
 	// try getting next record
 	while(1) {
 		status = curPage->nextRecord(curRec, nextRid);
@@ -431,7 +437,9 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
+#ifdef DEBUG
 	printf("In InsertFileScan insertRecord\n");
+#endif
     Page*	newPage;
     int		newPageNo;
     Status	status, unpinstatus;
@@ -451,14 +459,13 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 	if(status != OK) return status;
 
 	while((status = newPage->insertRecord(rec, outRid)) == NOSPACE){
-
 		status = bufMgr->unPinPage(filePtr, headerPage->lastPage, true);
 		//if there is not space in the page, allocate a new page
 		
 		if((status = bufMgr->allocPage(filePtr, newPageNo, newPage)) == OK){
 			if(status != OK) return status;
 			//read the page in to newPage
-
+			newPage->init(newPageNo);
 			headerPage->lastPage = newPageNo;
 			headerPage->pageCnt++;
 		}
