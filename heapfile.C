@@ -452,7 +452,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 
 	if((status = newPage->insertRecord(rec, outRid)) != OK){
 		//if there is not space in the page, allocate a new page
-		if((status = filePtr->allocatePage(newPageNo)) == OK){
+		if((status = bufMgr->allocPage(filePtr, newPageNo, newPage)) == OK){
 			status = bufMgr->unPinPage(filePtr, headerPage->lastPage, true);
 			if(status != OK) return status;
 
