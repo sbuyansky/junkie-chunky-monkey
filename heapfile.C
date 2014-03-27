@@ -25,6 +25,8 @@ const Status createHeapFile(const string fileName)
 		// create header page
 		bufMgr->allocPage(file, hdrPageNo, newPage);
 		hdrPage = (FileHdrPage*) newPage;
+		headerPageNo = hdrPageNo
+		hdrDirtyFlag = true;
 		
 		// create first page
 		bufMgr->allocPage(file, newPageNo, newPage);
@@ -38,7 +40,7 @@ const Status createHeapFile(const string fileName)
 		hdrPage->recCnt = 0;
 		
 		// unpin both new pages as dirty
-		status = bufMgr->unPinPage(file, hdrPageNo, true);
+		status = bufMgr->unPinPage(file, hdrPageNo, hdrDirtyFlag);
 		if(status != OK) return status;
 		status = bufMgr->unPinPage(file, newPageNo, true);
 		if(status != OK) return status;
