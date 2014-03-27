@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define DEBUG
+
 // routine to create a heapfile
 const Status createHeapFile(const string fileName)
 {
@@ -159,8 +161,10 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     }
     //Otherwise, you need to unpin the currently pinned page (assuming a page is pinned) and use the pageNo field of the RID to read the page into the buffer pool.
     else{
-    	bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-	bufMgr->readPage(filePtr, rid.pageNo, curPage);
+    	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	if(status != OK) return status;
+	status = bufMgr->readPage(filePtr, rid.pageNo, curPage);
+	if(status != OK) return status;
 	curPageNo = rid.pageNo;
 	status = curPage->getRecord(rid, rec);
     }
