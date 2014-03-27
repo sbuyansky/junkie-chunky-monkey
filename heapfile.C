@@ -447,15 +447,26 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 	// TODO check if have to change current page to the newly allocated page
 
 	//check if there is space in the page
-	if((status = curPage->insertRecord(rec, outRid)) != OK){
+	bufMgr->readPage(filePtr,headerPage->lastPage, newPage);
+	if(status != OK) return status;
+
+	if((status = newPage->insertRecord(rec, outRid)) != OK){
 		//if there is not space in the page, allocate a new page
 		if((status = filePtr->allocatePage(newPageNo)) == OK){
+			status = bufMgr->unPinPage(filePtr, headerPage->lastPage, true);
+			if(status != OK) return status;
+
 			//read the page in to newPage
-			if((status = filePtr->readPage(newPageNo, newPage)) == OK){
+			if((status = bufMgr->readPage(filePtr,newPageNo, newPage)) == OK){
+				headerPage->lastPage = newPageNo;
+				headerPage->pageCnt++;
 				//insert the record into the newly allocated page
 				status = newPage->insertRecord(rec, outRid);
 			}
 		}
+	}
+	if(status == OK){
+		headerPage->recCnt++;
 	}
 	return status;
 }
