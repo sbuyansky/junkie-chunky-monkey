@@ -269,6 +269,8 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	printf("In HeapFile scanNext\n");
 #endif
 	// try getting next record
+	
+
 	while(1) {
 		status = curPage->nextRecord(curRec, nextRid);
 		if(status == OK) {

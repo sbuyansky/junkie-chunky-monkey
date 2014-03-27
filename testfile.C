@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
 			// compare with what we should get back
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0) 
-			    cout << "err0r reading record " << i << " back" << endl;
+			    cout << "0:err0r reading record " << i << " back" << endl;
 		}
 		cout << "getRecord() tests passed successfully" << endl;
     }
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-                cout << "err0r reading record " << i << " back" << endl;
+                cout << "1:err0r reading record " << i << " back" << endl;
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-			cout << "err0r reading record " << i << " back" << endl;
+			cout << "2:err0r reading record " << i << " back" << endl;
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
 
 			// compare with what we should get back
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-			cout << "err0r reading record " << i << " back" << endl;
+			cout << "3:err0r reading record " << i << " back" << endl;
 		}
 		cout << "getRecord() tests passed successfully" << endl;
     }
