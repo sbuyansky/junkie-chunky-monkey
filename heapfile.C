@@ -273,7 +273,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
 	bufMgr->readPage(filePtr, headerPage->firstPage, curPage);
 
-	curRec =  curPage->firstRecord;
+	curPage->firstRecord(curRec);
 	nextRid= curRec;
 
 	//loop through pages
