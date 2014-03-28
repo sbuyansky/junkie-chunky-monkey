@@ -290,9 +290,93 @@ const Status HeapFileScan::resetScan()
 }
 
 
+//const Status HeapFileScan::scanNext(RID& outRid)
+//{
+//	Status 	status = OK;
+//	RID		nextRid;
+//	RID		tmpRid;
+//	int 	nextPageNo;
+//	Record      rec;
+//#ifdef DEBUG	
+//	printf("In HeapFile scanNext\n");
+//#endif
+//	// try getting next record
+////	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+//
+////	status = bufMgr->readPage(filePtr, headerPage->firstPage, curPage);
+//
+//	curPage->firstRecord(nextRid);
+//	curRec = nextRid;
+//
+//	while(1) {
+//		status = curPage->nextRecord(curRec, nextRid);
+//		if(status == OK) {
+//			// got a rid, get record
+//			curRec = nextRid;
+//			status = curPage->getRecord(curRec, rec);
+//			if(status != OK) return status;
+//			
+//			// check to see if the record matches
+//			if(matchRec(rec)) {
+//				printf("%d\n",nextRid);
+//				outRid = nextRid;
+//				return OK;
+//			}
+//			
+//			// loop back to start of while to continue looking if the record
+//			// doesn't match
+//			
+//		} else if(status == ENDOFPAGE) {
+//			cout << "ENDOFPAGE" << endl;
+//			// need to start on the next page
+//			// get nextPage
+//			status = curPage->getNextPage(nextPageNo);
+//			cout << curPageNo << ", " << nextPageNo << endl;
+//			if(nextPageNo == -1){
+//			cout << status << endl;
+//			return FILEEOF;
+//			}
+//
+//			// unpin current page
+//			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+//			if(status != OK) return status;
+//			curPageNo = nextPageNo;
+//			
+//			// read next page from file into curPage
+//			status = bufMgr->readPage(filePtr, curPageNo, curPage);
+//			if(status != OK) return status;
+//			
+//			// get record from first page
+//			status = curPage-> firstRecord(nextRid);
+//			if(status == OK) {
+//				// got a rid, get record
+//				curRec = nextRid;
+//				status = curPage->getRecord(curRec, rec);
+//				if(status != OK) return status;
+//			
+//				// check to see if the record matches
+//				if(matchRec(rec)) {
+//					outRid = nextRid;
+//					return OK;
+//				}
+//			
+//				// loop back to start of while to continue looking if the record
+//				// doesn't match
+//			
+//			} else {
+//				return status;
+//			}
+//			
+//		} else {
+//			// error occurred, return status
+//			return status;
+//		}
+//	}
+//	
+//}
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-	Status 	status = OK;
+	Status 	status;
 	RID		nextRid;
 	RID		tmpRid;
 	int 	nextPageNo;
@@ -300,79 +384,63 @@ const Status HeapFileScan::scanNext(RID& outRid)
 #ifdef DEBUG	
 	printf("In HeapFile scanNext\n");
 #endif
-	// try getting next record
-//	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	
+	//unpin current page
+	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	if (status != OK) return status;
 
-//	status = bufMgr->readPage(filePtr, headerPage->firstPage, curPage);
+	//read in first page of file
+	curPageNo = headerPage->firstPage;
+	status = bufMgr->readPage(filePtr, curPageNo, curPage);
+	curDirtyFlag = false;
+	if (status != OK) return status;
 
-	curPage->firstRecord(nextRid);
-	curRec = nextRid;
+	//get first record
+	status = curPage->firstRecord(tmpRid);
+	nextRid = tmpRid;
+	if (status != OK) return status;
+	
 
-	while(1) {
-		status = curPage->nextRecord(curRec, nextRid);
-		if(status == OK) {
-			// got a rid, get record
-			curRec = nextRid;
-			status = curPage->getRecord(curRec, rec);
-			if(status != OK) return status;
-			
-			// check to see if the record matches
-			if(matchRec(rec)) {
-				printf("%d\n",nextRid);
-				outRid = nextRid;
+	//loop through pages
+	while(curPageNo != -1){
+		//loop through records
+		while(status == OK){
+			//get the current record to check, store in rec
+			tmpRid = nextRid;
+			status = curPage->getRecord(tmpRid, rec);
+			if (status != OK) return status;
+
+			if(matchRec(rec)){
+				outRid = tmpRid;
 				return OK;
 			}
-			
-			// loop back to start of while to continue looking if the record
-			// doesn't match
-			
-		} else if(status == ENDOFPAGE) {
-			cout << "ENDOFPAGE" << endl;
-			// need to start on the next page
-			// get nextPage
+			status = curPage->nextRecord(tmpRid, nextRid);
+		}
+		if(status == ENDOFPAGE){
+			//get next page no
 			status = curPage->getNextPage(nextPageNo);
-			cout << curPageNo << ", " << nextPageNo << endl;
-			if(nextPageNo == -1){
-			cout << status << endl;
-			return FILEEOF;
-			}
+			if(nextPageNo == -1) return FILEEOF;
+			if (status != OK) return status;
 
-			// unpin current page
+			//unpin current page
 			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-			if(status != OK) return status;
+			if (status != OK) return status;
+
+			//read in nextPage
 			curPageNo = nextPageNo;
-			
-			// read next page from file into curPage
 			status = bufMgr->readPage(filePtr, curPageNo, curPage);
-			if(status != OK) return status;
-			
-			// get record from first page
-			status = curPage-> firstRecord(nextRid);
-			if(status == OK) {
-				// got a rid, get record
-				curRec = nextRid;
-				status = curPage->getRecord(curRec, rec);
-				if(status != OK) return status;
-			
-				// check to see if the record matches
-				if(matchRec(rec)) {
-					outRid = nextRid;
-					return OK;
-				}
-			
-				// loop back to start of while to continue looking if the record
-				// doesn't match
-			
-			} else {
-				return status;
-			}
-			
-		} else {
-			// error occurred, return status
+			if (status != OK) return status;
+
+			//get first record
+			status = curPage->firstRecord(tmpRid);
+			nextRid = tmpRid;
+			if (status != OK) return status;
+		}
+		else{
 			return status;
 		}
 	}
-	
+	return FILEEOF;
 }
 
 
