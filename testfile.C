@@ -117,26 +117,22 @@ int main(int argc, char **argv)
 
 			// compare with what we should get back
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0) 
-			    cout << "0:err0r reading record " << i << " back" << endl;
+			    cout << "err0r reading record " << i << " back" << endl;
 		}
 		cout << "getRecord() tests passed successfully" << endl;
     }
-    file1->printHeapFile();
     delete file1;
-exit(1);
+    
     // scan the file sequentially checking that each record was stored properly
     cout << "scan file dummy.02 " << endl;
     scan1 = new HeapFileScan("dummy.02", status);
-
-
     if (status != OK) error.print(status);
     else 
     {
         scan1->startScan(0, 0, STRING, NULL, EQ);
 		i = 0; 
-int nc = 0;
-bool sc = true;
-		while ((status = scan1->scanNext(rec2Rid)) != FILEEOF && sc == true)
+
+		while (((status = scan1->scanNext(rec2Rid)) != FILEEOF))
 		{
             // reconstruct record i
 			sprintf(rec1.s, "This is record %05d", i);
@@ -145,7 +141,7 @@ bool sc = true;
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-                {cout << "1:err0r reading record " << i << " back" << endl;}else{nc++;cout<<"Correct"<<nc;}
+                cout << "err0r reading record " << i << " back" << endl;
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
@@ -155,7 +151,6 @@ bool sc = true;
                  << endl;
         
     }
-    exit(0);
     // delete scan object
     scan1->endScan();
     delete scan1;
@@ -180,7 +175,7 @@ bool sc = true;
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-			cout << "2:err0r reading record " << i << " back" << endl;
+			cout << "err0r reading record " << i << " back" << endl;
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
@@ -217,7 +212,7 @@ bool sc = true;
 
 			// compare with what we should get back
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-			cout << "3:err0r reading record " << i << " back" << endl;
+			cout << "err0r reading record " << i << " back" << endl;
 		}
 		cout << "getRecord() tests passed successfully" << endl;
     }
