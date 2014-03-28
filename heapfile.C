@@ -1,16 +1,11 @@
 #include "heapfile.h"
 #include "error.h"
 #include <stdio.h>
-#include <stdlib.h>
-
-#define DEBUG
 
 // routine to create a heapfile
 const Status createHeapFile(const string fileName)
 {
-#ifdef DEBUG
 	printf("In createHeapFile");
-#endif
     File* 		file;
     Status 		status;
     FileHdrPage*	hdrPage;
@@ -74,9 +69,8 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
     Page*	pagePtr;
-#ifdef DEBUG
+
     printf("In HeapFile Constructor\n");
-#endif
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
@@ -149,9 +143,7 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
-#ifdef DEBUG
 	printf("In HeapFile getRecord\n");
-#endif
     Status status;
     
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
@@ -161,10 +153,8 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     }
     //Otherwise, you need to unpin the currently pinned page (assuming a page is pinned) and use the pageNo field of the RID to read the page into the buffer pool.
     else{
-    	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-	if(status != OK) return status;
-	status = bufMgr->readPage(filePtr, rid.pageNo, curPage);
-	if(status != OK) return status;
+    	bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	bufMgr->readPage(filePtr, rid.pageNo, curPage);
 	curPageNo = rid.pageNo;
 	status = curPage->getRecord(rid, rec);
     }
@@ -265,12 +255,10 @@ const Status HeapFileScan::scanNext(RID& outRid)
 	RID		tmpRid;
 	int 	nextPageNo;
 	Record      rec;
-#ifdef DEBUG	
-	printf("In HeapFile scanNext\n");
-#endif
-	// try getting next record
 	
+	printf("In HeapFile scanNext\n");
 
+	// try getting next record
 	while(1) {
 		status = curPage->nextRecord(curRec, nextRid);
 		if(status == OK) {
@@ -443,9 +431,7 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
-#ifdef DEBUG
 	printf("In InsertFileScan insertRecord\n");
-#endif
     Page*	newPage;
     int		newPageNo;
     Status	status, unpinstatus;
@@ -461,19 +447,22 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 	// TODO check if have to change current page to the newly allocated page
 
 	//check if there is space in the page
-	status = bufMgr->readPage(filePtr,headerPage->lastPage, newPage);
+	bufMgr->readPage(filePtr,headerPage->lastPage, newPage);
 	if(status != OK) return status;
 
-	while((status = newPage->insertRecord(rec, outRid)) == NOSPACE){
-		status = bufMgr->unPinPage(filePtr, headerPage->lastPage, true);
+	if((status = newPage->insertRecord(rec, outRid)) != OK){
 		//if there is not space in the page, allocate a new page
-		
 		if((status = bufMgr->allocPage(filePtr, newPageNo, newPage)) == OK){
+			status = bufMgr->unPinPage(filePtr, headerPage->lastPage, true);
 			if(status != OK) return status;
+
 			//read the page in to newPage
-			newPage->init(newPageNo);
-			headerPage->lastPage = newPageNo;
-			headerPage->pageCnt++;
+			if((status = bufMgr->readPage(filePtr,newPageNo, newPage)) == OK){
+				headerPage->lastPage = newPageNo;
+				headerPage->pageCnt++;
+				//insert the record into the newly allocated page
+				status = newPage->insertRecord(rec, outRid);
+			}
 		}
 	}
 	if(status == OK){
