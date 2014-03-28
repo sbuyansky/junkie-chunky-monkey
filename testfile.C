@@ -121,11 +121,14 @@ int main(int argc, char **argv)
 		}
 		cout << "getRecord() tests passed successfully" << endl;
     }
+    file1->printHeapFile();
     delete file1;
-
+exit(1);
     // scan the file sequentially checking that each record was stored properly
     cout << "scan file dummy.02 " << endl;
     scan1 = new HeapFileScan("dummy.02", status);
+
+
     if (status != OK) error.print(status);
     else 
     {
@@ -142,7 +145,7 @@ bool sc = true;
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-                {cout << "1:err0r reading record " << i << " back" << endl;sc=false;}else{nc++;cout<<"Correct"<<nc;}
+                {cout << "1:err0r reading record " << i << " back" << endl;}else{nc++;cout<<"Correct"<<nc;}
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);

@@ -58,6 +58,7 @@ public:
 
   // given a RID, read record from file, returning pointer and length
   const Status getRecord(const RID &rid, Record & rec);
+  void printHeapFile();
 };
 
 
