@@ -81,15 +81,27 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
+    		//get the header page number as the first page
 		if((status = filePtr->getFirstPage(headerPageNo)) != OK){
 			returnStatus = status;
 			return;
 		}
 		
-		bufMgr->readPage(filePtr, headerPageNo, (Page *&) headerPage);
+		//read the header page into the buffer
+		status = bufMgr->readPage(filePtr, headerPageNo, (Page *&) headerPage);
+		if (status != OK) {
+			returnStatus = status;
+			return;
+		}
 		hdrDirtyFlag = true;
 
-		bufMgr->readPage(filePtr,headerPage->firstPage,curPage);
+		//read the first page into curPage
+		status = bufMgr->readPage(filePtr,headerPage->firstPage,curPage);
+		if(status != OK){
+			returnStatus = status;
+			return;
+		}
+
 		curPageNo = headerPage->firstPage;
 		curDirtyFlag = true;
 		curRec = NULLRID;
@@ -166,6 +178,7 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 	status = bufMgr->readPage(filePtr, rid.pageNo, curPage);
 	if(status != OK) return status;
 	curPageNo = rid.pageNo;
+	curDirtyFlag = false;
 	status = curPage->getRecord(rid, rec);
     }
     return status;
@@ -182,11 +195,12 @@ void HeapFile::printHeapFile(){
 	cout << "Last Page: " << headerPage->lastPage << endl;
 	int i = headerPage->firstPage;
 	Page * iter;
-		cout << i << " ";
-		Status status = filePtr->readPage(i, iter);
-		cout << status << endl;
-		iter->getNextPage(i);
-		cout << i << endl;
+	cout << i << " " << endl;
+	printf("%p\n", filePtr);
+	Status status = filePtr->readPage(i, iter);
+	cout << status << endl;
+	iter->getNextPage(i);
+	cout << i << endl;
 }
 
 HeapFileScan::HeapFileScan(const string & name,
@@ -504,10 +518,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 			headerPage->lastPage = newPageNo;
 			newPage->init(newPageNo);
 			headerPage->pageCnt++;
-			
 			lastPagePtr = newPage;
-		//	this->printHeapFile();
-			cout << "nerd" << endl;
 		}
 	}
 	if(status == OK){
