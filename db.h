@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <functional>
 #include "error.h"
-#include <string.h>
+#include <string>
 using namespace std;
 
 // define if debug output wanted
