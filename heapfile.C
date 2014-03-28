@@ -292,14 +292,15 @@ const Status HeapFileScan::scanNext(RID& outRid)
 			// need to start on the next page
 			// get nextPage
 			status = curPage->getNextPage(nextPageNo);
-			if(status != OK) return status;
-			
+			if(status != OK) return FILEEOF;
+
 			// unpin current page
 			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
 			if(status != OK) return status;
+			curPageNo = nextPageNo;
 			
 			// read next page from file into curPage
-			status = filePtr->readPage(nextPageNo, curPage);
+			status = filePtr->readPage(curPageNo, curPage);
 			if(status != OK) return status;
 			
 			// get record from first page
@@ -319,9 +320,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
 				// loop back to start of while to continue looking if the record
 				// doesn't match
 			
-			} else if(status = NORECORDS) {
-				// loop back to start of while loop to see if there is a next
-				// page
 			} else {
 				return status;
 			}

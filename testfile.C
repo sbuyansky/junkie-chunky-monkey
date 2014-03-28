@@ -131,8 +131,9 @@ int main(int argc, char **argv)
     {
         scan1->startScan(0, 0, STRING, NULL, EQ);
 		i = 0; 
-
-		while (((status = scan1->scanNext(rec2Rid)) != FILEEOF)
+int nc = 0;
+bool sc = true;
+		while ((status = scan1->scanNext(rec2Rid)) != FILEEOF && sc == true)
 		{
             // reconstruct record i
 			sprintf(rec1.s, "This is record %05d", i);
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-                cout << "1:err0r reading record " << i << " back" << endl;test = false;
+                {cout << "1:err0r reading record " << i << " back" << endl;sc=false;}else{nc++;cout<<"Correct"<<nc;}
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
