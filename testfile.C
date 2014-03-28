@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 		cout << "getRecord() tests passed successfully" << endl;
     }
     delete file1;
-    
+
     // scan the file sequentially checking that each record was stored properly
     cout << "scan file dummy.02 " << endl;
     scan1 = new HeapFileScan("dummy.02", status);
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
         scan1->startScan(0, 0, STRING, NULL, EQ);
 		i = 0; 
 
-		while (((status = scan1->scanNext(rec2Rid)) != FILEEOF))
+		while (((status = scan1->scanNext(rec2Rid)) != FILEEOF)
 		{
             // reconstruct record i
 			sprintf(rec1.s, "This is record %05d", i);
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     	    status = scan1->getRecord(dbrec2);
     	    if (status != OK) break;
 			if (memcmp(&rec1, dbrec2.data, sizeof(RECORD)) != 0)
-                cout << "1:err0r reading record " << i << " back" << endl;
+                cout << "1:err0r reading record " << i << " back" << endl;test = false;
     	    i++;
 		}
 		if (status != FILEEOF) error.print(status);
@@ -151,6 +151,7 @@ int main(int argc, char **argv)
                  << endl;
         
     }
+    exit(0);
     // delete scan object
     scan1->endScan();
     delete scan1;

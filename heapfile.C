@@ -292,7 +292,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
 			// need to start on the next page
 			// get nextPage
 			status = curPage->getNextPage(nextPageNo);
-			if(status != OK) return status;
+			if(status != OK) return FILEEOF;
 			
 			// unpin current page
 			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
