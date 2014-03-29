@@ -1,3 +1,10 @@
+/*
+ * Connor Zarecki
+ * Ryan Nie
+ * Spencer Buyansky
+ *
+ */
+
 #include "heapfile.h"
 #include "error.h"
 #include <stdio.h>
