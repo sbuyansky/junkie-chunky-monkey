@@ -433,15 +433,14 @@ int main(int argc, char **argv)
             cout << "Err0r.   scan should have returned " << num/2 + num
                  << " records!" << endl;
         if (scan1->scanNext(rec2Rid) != FILEEOF)
-            cout << "Err0r.   scan past end of file did not return FILEEOF!" << endl;
+            cout << "Err0r.   scan1 past end of file did not return FILEEOF!" << endl;
         if (scan2->scanNext(rec2Rid) != FILEEOF)
-            cout << "Err0r.   scan past end of file did not return FILEEOF!" << endl;
+            cout << "Err0r.   scan2 past end of file did not return FILEEOF!" << endl;
     }
     delete scan1;
     delete scan2;
     scan1 = scan2 = NULL;
 	
-    
     
     cout << endl;
     cout << "Destroy dummy.03" << endl;
