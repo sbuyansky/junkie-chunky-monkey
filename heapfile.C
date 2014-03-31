@@ -293,7 +293,9 @@ const Status HeapFileScan::resetScan()
     else curRec = markedRec;
     return OK;
 }
-
+//Get rid's of all reconds on a page. Converts RID to pointer to data
+//and see if it satisfies filter. If it does store the RID in curRec 
+//and return it. 
 const Status HeapFileScan::scanNext(RID& outRid)
 {
 	Status 	status;
